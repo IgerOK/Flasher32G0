@@ -94,8 +94,8 @@ ddlBOR := myGui.Add("DropDownList", "x625 y40 w115 Choose1", ["BOR OFF", "Level 
 lblCurBOR := myGui.Add("Text", "x740 y43 w70 h20 +Right cGray", "")
 
 gbIWDG := myGui.Add("GroupBox", "x610 y100 w210 h65", "IWDG (Сторожевой таймер)")
-chkIWDG := myGui.Add("Checkbox", "x625 y125 w115 h20", "Аппаратный HW")
-lblCurIWDG := myGui.Add("Text", "x740 y125 w70 h20 +Right cGray", "")
+chkIWDG := myGui.Add("Checkbox", "x625 y118 w170 h20", "Аппаратный HW")
+lblCurIWDG := myGui.Add("Text", "x625 y140 w170 h18 cGray", "")
 
 gbRDP := myGui.Add("GroupBox", "x610 y175 w210 h65", "RDP (Защита от чтения)")
 chkLockRDP := myGui.Add("Checkbox", "x625 y200 w115 h20", "Включить Lev 1")
@@ -105,9 +105,9 @@ gbNRST := myGui.Add("GroupBox", "x610 y250 w210 h75", "NRST MODE (Режим с�
 ddlNRST := myGui.Add("DropDownList", "x625 y275 w115 Choose1", ["Input/Output", "Reset Input Only"])
 lblCurNRST := myGui.Add("Text", "x740 y278 w70 h20 +Right cGray", "")
 
-gbBOOT := myGui.Add("GroupBox", "x610 y335 w210 h80", "BOOT0 (распознавание пина)")
-chkBOOT0 := myGui.Add("Checkbox", "x625 y358 w180 h20", "Распознавать пин BOOT0")
-lblCurBOOT0 := myGui.Add("Text", "x625 y380 w180 h20 cGray", "(nBOOT_SEL=0: legacy mode)")
+gbBOOT := myGui.Add("GroupBox", "x610 y335 w210 h80", "BOOT0 (System Bootloader)")
+chkBOOT0 := myGui.Add("Checkbox", "x625 y358 w180 h20", "Активировать bootloader")
+lblCurBOOT0 := myGui.Add("Text", "x625 y380 w180 h20 cGray", "(nBOOT0=0: system mem)")
 
 ; --- НОВЫЕ КНОПКИ (ОПЦИИ и СПРАВКА) ---
 btnOptOnly := myGui.Add("Button", "x610 y425 w100 h35", "ОПЦИИ")
@@ -168,7 +168,7 @@ OnGuiSize(thisGui, windowMinMax, width, height) {
     logBox.Move(, , leftPanelWidth, newLogHeight)
 
     gbBOR.Move(rightX),    ddlBOR.Move(rightX + 15),    lblCurBOR.Move(rightX + 130)
-    gbIWDG.Move(rightX),   chkIWDG.Move(rightX + 15),   lblCurIWDG.Move(rightX + 130)
+    gbIWDG.Move(rightX),   chkIWDG.Move(rightX + 15),   lblCurIWDG.Move(rightX + 15)
     gbRDP.Move(rightX),    chkLockRDP.Move(rightX + 15), lblCurRDP.Move(rightX + 130)
     gbNRST.Move(rightX),   ddlNRST.Move(rightX + 15),   lblCurNRST.Move(rightX + 130)
     gbBOOT.Move(rightX),   chkBOOT0.Move(rightX + 15),  lblCurBOOT0.Move(rightX + 15)
@@ -202,7 +202,7 @@ ShowOptionsPreview() {
     
     if (MCU_FAMILY == "G0" || MCU_FAMILY == "G4") {
         previewText .= "  • NRST Mode: " ddlNRST.Text "`n"
-        boot0Text := chkBOOT0.Value ? "Пин BOOT0 распознаётся (nBOOT_SEL=0, legacy)" : "Бит nBOOT0 управляет загрузкой (nBOOT_SEL=1)"
+        boot0Text := chkBOOT0.Value ? "Активен (nBOOT0=0) — загрузка в System Memory (UART/USB DFU)" : "Неактивен (nBOOT0=1) — загрузка в пользовательскую Flash"
         previewText .= "  • BOOT0: " boot0Text "`n"
     }
     
@@ -216,9 +216,10 @@ ShowOptionsPreview() {
         warningsText .= "    Для разблокировки потребуется кнопка 'РАЗБЛОКИРОВАТЬ ЧИП'.`n"
     }
     if (chkBOOT0.Value && (MCU_FAMILY == "G0" || MCU_FAMILY == "G4")) {
-        warningsText .= "`n[!] ВНИМАНИЕ: пин BOOT0 будет распознаваться (legacy mode).`n"
-        warningsText .= "    При BOOT0=1 чип загрузится из System Memory (bootloader: UART/USB DFU).`n"
-        warningsText .= "    При BOOT0=0 (или GND) загрузка из основной Flash памяти.`n"
+        warningsText .= "`n[!] ВНИМАНИЕ: System Memory Bootloader будет АКТИВЕН (nBOOT0=0).`n"
+        warningsText .= "    После RESET/питания чип загружается в bootloader (UART/USB DFU),`n"
+        warningsText .= "    ПОЛЬЗОВАТЕЛЬСКАЯ ПРОШИВКА НЕ ЗАПУСКАЕТСЯ!`n"
+        warningsText .= "    После обновления через UART верните BOOT0 в состояние 'Неактивен'.`n"
     }
     
     if (warningsText != "") {
@@ -350,14 +351,14 @@ ReadOptionBytes() {
                 }
             }
 
-            ; Распознавание пина BOOT0 (nBOOT_SEL: 0 = legacy pin, 1 = bit nBOOT0)
-            bootSel := -1
-            if RegExMatch(logText, "i)nBOOT_SEL\s*:\s*(0x[0-9A-Fa-f]+)", &matchBOOTSEL) || RegExMatch(logText, "i)BOOT_SEL\s*:\s*(0x[0-9A-Fa-f]+)", &matchBOOTSEL) {
-                try bootSel := Integer(matchBOOTSEL[1])
-                if (bootSel == 0) {
-                    chkBOOT0.Value := 1, lblCurBOOT0.Value := "(legacy pin)"
+            ; System Memory Bootloader (nBOOT0: 0 = bootloader активен, 1 = загрузка в user flash)
+            boot0 := -1
+            if RegExMatch(logText, "i)nBOOT0\s*:\s*(0x[0-9A-Fa-f]+)", &matchBOOT0) || RegExMatch(logText, "i)BOOT0\s*:\s*(0x[0-9A-Fa-f]+)", &matchBOOT0) {
+                try boot0 := Integer(matchBOOT0[1])
+                if (boot0 == 0) {
+                    chkBOOT0.Value := 1, lblCurBOOT0.Value := "(bootloader ON)"
                 } else {
-                    chkBOOT0.Value := 0, lblCurBOOT0.Value := "(bit nBOOT0)"
+                    chkBOOT0.Value := 0, lblCurBOOT0.Value := "(user flash)"
                 }
             } else {
                 lblCurBOOT0.Value := "(не читается)"
@@ -426,8 +427,9 @@ OnOptOnlyClick(*) {
         }
         iwdgArgs := "IWDG_SW=" (chkIWDG.Value ? "0" : "1")
         nrstArgs := "NRST_MODE=" (ddlNRST.Value == 1 ? "3" : "1")
-        ; nBOOT_SEL: 0 = распознавать пин BOOT0 (legacy, UART bootloader), 1 = использовать бит nBOOT0
-        bootSelArgs := "nBOOT_SEL=" (chkBOOT0.Value ? "0" : "1")
+        ; System Memory Bootloader: nBOOT_SEL=1 (игнорировать пин, заводское значение)
+        ; + nBOOT0=0 — активировать bootloader (UART/USB DFU), nBOOT0=1 — user flash
+        bootSelArgs := "nBOOT_SEL=1 nBOOT0=" (chkBOOT0.Value ? "0" : "1")
     } else if (MCU_FAMILY == "F4") {
         if (ddlBOR.Value == 1) {
             borArgs := "BOR_LEV=3"
@@ -500,8 +502,9 @@ OnFlashClick(*) {
         }
         iwdgArgs := "IWDG_SW=" (chkIWDG.Value ? "0" : "1")
         nrstArgs := "NRST_MODE=" (ddlNRST.Value == 1 ? "3" : "1")
-        ; nBOOT_SEL: 0 = распознавать пин BOOT0 (legacy, UART bootloader), 1 = использовать бит nBOOT0
-        bootSelArgs := "nBOOT_SEL=" (chkBOOT0.Value ? "0" : "1")
+        ; System Memory Bootloader: nBOOT_SEL=1 (игнорировать пин, заводское значение)
+        ; + nBOOT0=0 — активировать bootloader (UART/USB DFU), nBOOT0=1 — user flash
+        bootSelArgs := "nBOOT_SEL=1 nBOOT0=" (chkBOOT0.Value ? "0" : "1")
     } else if (MCU_FAMILY == "F4") {
         if (ddlBOR.Value == 1) {
             borArgs := "BOR_LEV=3" 
@@ -631,11 +634,16 @@ OnHelpClick(*) {
        NRST MODE - режим работы ноги сброса
          Input/Output (рекомендуется) или Reset Input Only
 
-       BOOT0 - распознавание пина BOOT0 (nBOOT_SEL, G0/G4)
-         Включено: пин BOOT0 распознаётся (nBOOT_SEL=0) — при BOOT0=1
-                   чип загружается из System Memory (bootloader: UART/USB DFU)
-         Выключено: загрузка управляется битом nBOOT0 в Option Bytes
-                    (nBOOT_SEL=1, заводское значение по умолчанию)
+       BOOT0 - System Memory Bootloader (nBOOT_SEL + nBOOT0, G0/G4)
+         Активировать bootloader (nBOOT_SEL=1, nBOOT0=0):
+           чип загружается в System Memory — прошивка без ST-LINK
+           по UART (COM-порт, 115200/9600) или USB DFU.
+           SWD при этом остаётся доступен (отладчик работает независимо).
+         НЕ активирован (nBOOT_SEL=1, nBOOT0=1):
+           загрузка в пользовательскую Flash (обычный режим).
+         ВАЖНО: пока bootloader АКТИВЕН (nBOOT0=0), пользовательская
+         прошивка НЕ запускается! После обновления через UART верните
+         чекбокс в состояние 'Не активен'.
 
     📁 ПРОШИВКА:
        1. Скомпилируйте проект в Arduino IDE
