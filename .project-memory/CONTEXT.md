@@ -41,7 +41,7 @@ Flasher32G0.ahk          # нужен AutoHotkey v2
 ## 4. Current status
 
 - Репо склонировано в `D:\STM32-prj\Flasher32G0`, локальный git работает (main).
-- Код: `Flasher32G0.ahk` (GUI-логика), `Flasher32G0.exe` (билд v1.1, скомпилирован пользователем ранее; после `5d57bc5` .exe устарел — пользователь пересоберёт сам), `README.md`, `LICENSE`, `screenshot.png`.
+- Код: `Flasher32G0.ahk` (GUI-логика), `Flasher32G0.exe` (текущий билд v1.1, актуален с `5d57bc5`, закоммичен в `44a2d75`), `README.md`, `LICENSE`, `screenshot.png`, `flasher_v1.1.png`.
 - **Доработка (v1.1):** добавлен опшен-байт **BOOT0 / System Memory Bootloader** для семейств G0/G4:
   - чекбокс «Активировать bootloader» в правой панели;
   - запись `nBOOT_SEL=1` (заводское: пин BOOT0 игнорируется) + `nBOOT0=0` (bootloader ON) или `nBOOT0=1` (user flash);
