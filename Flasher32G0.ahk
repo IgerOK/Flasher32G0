@@ -3,7 +3,7 @@
 ; ============================================================================
 ; Автор:      https://github.com/IgerOK
 ; Лицензия:   MIT (2026)
-; Версия:     1.0
+; Версия:     1.1
 ;
 ; Описание:   GUI-утилита для прошивки STM32 и настройки Option Bytes
 ;              через STM32CubeProgrammer CLI.
@@ -44,6 +44,7 @@ global edtCube, edtBinDir, btnBrowseCube, btnBrowseBin, ddlBinFiles, txtTitle, b
 global gbBOR, ddlBOR, lblCurBOR
 global gbIWDG, chkIWDG, lblCurIWDG, gbRDP, chkLockRDP, lblCurRDP
 global gbNRST, ddlNRST, lblCurNRST, txtFamilyInfo
+global gbBOOT, chkBOOT0, lblCurBOOT0
 global btnOptOnly, btnHelp
 
 ; Проверяем наличие программатора по умолчанию перед чтением конфига
@@ -57,7 +58,7 @@ if FileExist(DEFAULT_CUBE_PATH) {
 }
 
 ; --- СОЗДАНИЕ ИНТЕРФЕЙСА (GUI) ---
-myGui := Gui("+Resize +MinSize840x530", "Flasher32G0 v1.0 — запись в STM32 flash по адресу 0x08000000")
+myGui := Gui("+Resize +MinSize840x615", "Flasher32G0 v1.1 — запись в STM32 flash по адресу 0x08000000")
 myGui.OnEvent("Size", OnGuiSize)
 myGui.OnEvent("Close", (*) => (SaveConfig(), ExitApp()))
 myGui.SetFont("s10", "Segoe UI")
@@ -104,21 +105,25 @@ gbNRST := myGui.Add("GroupBox", "x610 y250 w210 h75", "NRST MODE (Режим с�
 ddlNRST := myGui.Add("DropDownList", "x625 y275 w115 Choose1", ["Input/Output", "Reset Input Only"])
 lblCurNRST := myGui.Add("Text", "x740 y278 w70 h20 +Right cGray", "")
 
+gbBOOT := myGui.Add("GroupBox", "x610 y335 w210 h80", "BOOT0 (распознавание пина)")
+chkBOOT0 := myGui.Add("Checkbox", "x625 y358 w180 h20", "Распознавать пин BOOT0")
+lblCurBOOT0 := myGui.Add("Text", "x625 y380 w180 h20 cGray", "(nBOOT_SEL=0: legacy mode)")
+
 ; --- НОВЫЕ КНОПКИ (ОПЦИИ и СПРАВКА) ---
-btnOptOnly := myGui.Add("Button", "x610 y330 w100 h35", "ОПЦИИ")
+btnOptOnly := myGui.Add("Button", "x610 y425 w100 h35", "ОПЦИИ")
 btnOptOnly.OnEvent("Click", OnOptOnlyClick)
 
-btnHelp := myGui.Add("Button", "x720 y330 w100 h35", "СПРАВКА")
+btnHelp := myGui.Add("Button", "x720 y425 w100 h35", "СПРАВКА")
 btnHelp.OnEvent("Click", OnHelpClick)
 
 ; --- СУЩЕСТВУЮЩИЕ КНОПКИ ---
-btnUnlock := myGui.Add("Button", "x610 y375 w210 h40", "РАЗБЛОКИРОВАТЬ ЧИП")
+btnUnlock := myGui.Add("Button", "x610 y470 w210 h40", "РАЗБЛОКИРОВАТЬ ЧИП")
 btnUnlock.OnEvent("Click", OnUnlockClick)
 
-btnFlash := myGui.Add("Button", "x610 y425 w210 h45 Default Disabled", "ПРОГРАММИРОВАТЬ ЧИП")
+btnFlash := myGui.Add("Button", "x610 y520 w210 h45 Default Disabled", "ПРОГРАММИРОВАТЬ ЧИП")
 btnFlash.OnEvent("Click", OnFlashClick)
 
-btnExit := myGui.Add("Button", "x610 y480 w210 h35", "ВЫХОД")
+btnExit := myGui.Add("Button", "x610 y575 w210 h35", "ВЫХОД")
 btnExit.OnEvent("Click", (*) => (SaveConfig(), ExitApp()))
 
 ; --- ЗАГРУЗКА КОНФИГУРАЦИИ И ЗАПУСК ОКНА ---
@@ -128,7 +133,7 @@ LoadConfig(&winX, &winY, &winW, &winH)
 if (winX != "" && winY != "" && winW != "" && winH != "") {
     myGui.Show("x" winX " y" winY " w" winW " h" winH)
 } else {
-    myGui.Show("w840 h530 Center")
+    myGui.Show("w840 h615 Center")
 }
 
 if (CUBE != "") {
@@ -166,13 +171,14 @@ OnGuiSize(thisGui, windowMinMax, width, height) {
     gbIWDG.Move(rightX),   chkIWDG.Move(rightX + 15),   lblCurIWDG.Move(rightX + 130)
     gbRDP.Move(rightX),    chkLockRDP.Move(rightX + 15), lblCurRDP.Move(rightX + 130)
     gbNRST.Move(rightX),   ddlNRST.Move(rightX + 15),   lblCurNRST.Move(rightX + 130)
+    gbBOOT.Move(rightX),   chkBOOT0.Move(rightX + 15),  lblCurBOOT0.Move(rightX + 15)
 
-    btnOptOnly.Move(rightX, 330)
-    btnHelp.Move(rightX + 110, 330)
+    btnOptOnly.Move(rightX, 425)
+    btnHelp.Move(rightX + 110, 425)
 
-    btnUnlock.Move(rightX, 375)
-    btnFlash.Move(rightX, 425)
-    btnExit.Move(rightX, 480)
+    btnUnlock.Move(rightX, 470)
+    btnFlash.Move(rightX, 520)
+    btnExit.Move(rightX, 575)
 
     DllCall("InvalidateRect", "Ptr", thisGui.Hwnd, "Ptr", 0, "Int", true)
     DllCall("UpdateWindow", "Ptr", thisGui.Hwnd)
@@ -182,7 +188,7 @@ OnGuiSize(thisGui, windowMinMax, width, height) {
 ; ПОКАЗ ПАРАМЕТРОВ ПЕРЕД ЗАПИСЬЮ
 ; ============================================================================
 ShowOptionsPreview() {
-    global MCU_FAMILY, ddlBOR, chkIWDG, chkLockRDP, ddlNRST
+    global MCU_FAMILY, ddlBOR, chkIWDG, chkLockRDP, ddlNRST, chkBOOT0
     
     previewText := "Будут записаны следующие параметры:`n`n"
     
@@ -196,6 +202,8 @@ ShowOptionsPreview() {
     
     if (MCU_FAMILY == "G0" || MCU_FAMILY == "G4") {
         previewText .= "  • NRST Mode: " ddlNRST.Text "`n"
+        boot0Text := chkBOOT0.Value ? "Пин BOOT0 распознаётся (nBOOT_SEL=0, legacy)" : "Бит nBOOT0 управляет загрузкой (nBOOT_SEL=1)"
+        previewText .= "  • BOOT0: " boot0Text "`n"
     }
     
     warningsText := ""
@@ -206,6 +214,11 @@ ShowOptionsPreview() {
     if (chkLockRDP.Value) {
         warningsText .= "`n[!] ВНИМАНИЕ: Включение RDP Level 1 заблокирует чтение/запись через SWD.`n"
         warningsText .= "    Для разблокировки потребуется кнопка 'РАЗБЛОКИРОВАТЬ ЧИП'.`n"
+    }
+    if (chkBOOT0.Value && (MCU_FAMILY == "G0" || MCU_FAMILY == "G4")) {
+        warningsText .= "`n[!] ВНИМАНИЕ: пин BOOT0 будет распознаваться (legacy mode).`n"
+        warningsText .= "    При BOOT0=1 чип загрузится из System Memory (bootloader: UART/USB DFU).`n"
+        warningsText .= "    При BOOT0=0 (или GND) загрузка из основной Flash памяти.`n"
     }
     
     if (warningsText != "") {
@@ -233,7 +246,7 @@ ReadOptionBytes() {
     
     txtTitle.Value := "СТАТУС: Чтение Option Bytes..."
     logBox.Value := "====== [1/2] ЧТЕНИЕ OPTION BYTES ======`r`n"
-    lblCurBOR.Value := "", lblCurIWDG.Value := "", lblCurRDP.Value := "", lblCurNRST.Value := ""
+    lblCurBOR.Value := "", lblCurIWDG.Value := "", lblCurRDP.Value := "", lblCurNRST.Value := "", lblCurBOOT0.Value := ""
     
     cmd := '"' CUBE '" -c port=SWD mode=UR reset=HWrst -ob displ'
     logText := RunCMD(cmd)
@@ -336,6 +349,19 @@ ReadOptionBytes() {
                     lblCurNRST.Value := "(Reset In)", ddlNRST.Text := "Reset Input Only"
                 }
             }
+
+            ; Распознавание пина BOOT0 (nBOOT_SEL: 0 = legacy pin, 1 = bit nBOOT0)
+            bootSel := -1
+            if RegExMatch(logText, "i)nBOOT_SEL\s*:\s*(0x[0-9A-Fa-f]+)", &matchBOOTSEL) || RegExMatch(logText, "i)BOOT_SEL\s*:\s*(0x[0-9A-Fa-f]+)", &matchBOOTSEL) {
+                try bootSel := Integer(matchBOOTSEL[1])
+                if (bootSel == 0) {
+                    chkBOOT0.Value := 1, lblCurBOOT0.Value := "(legacy pin)"
+                } else {
+                    chkBOOT0.Value := 0, lblCurBOOT0.Value := "(bit nBOOT0)"
+                }
+            } else {
+                lblCurBOOT0.Value := "(не читается)"
+            }
         }
         logBox.Value .= logText
     } else {
@@ -355,14 +381,19 @@ ConfigureGuiForFamily(family) {
     if (family == "G0" || family == "G4") {
         ddlBOR.Enabled := true, ddlNRST.Enabled := true
         chkIWDG.Enabled := true, chkLockRDP.Enabled := true
+        chkBOOT0.Enabled := true
     } else if (family == "F4") {
         ddlBOR.Enabled := true, ddlNRST.Enabled := false 
         chkIWDG.Enabled := true, chkLockRDP.Enabled := true
+        chkBOOT0.Enabled := false, chkBOOT0.Value := 0
         lblCurNRST.Value := "(зашито)"
+        lblCurBOOT0.Value := "(N/A)"
     } else if (family == "F1" || family == "UNKNOWN") {
         ddlBOR.Enabled := false, ddlNRST.Enabled := false
         chkIWDG.Enabled := false, chkLockRDP.Enabled := true
+        chkBOOT0.Enabled := false, chkBOOT0.Value := 0
         lblCurBOR.Value := "(N/A)", lblCurNRST.Value := "(N/A)", lblCurIWDG.Value := "(N/A)"
+        lblCurBOOT0.Value := "(N/A)"
     }
 }
 
@@ -370,7 +401,7 @@ ConfigureGuiForFamily(family) {
 ; ПРОГРАММИРОВАНИЕ ТОЛЬКО OPTION BYTES
 ; ============================================================================
 OnOptOnlyClick(*) {
-    global MCU_FAMILY
+    global MCU_FAMILY, chkBOOT0
     
     if !ShowOptionsPreview() {
         logBox.Value := "Операция отменена пользователем.`r`n"
@@ -384,7 +415,7 @@ OnOptOnlyClick(*) {
         return
     }
     
-    borArgs := "", iwdgArgs := "", rdpArgs := "", nrstArgs := ""
+    borArgs := "", iwdgArgs := "", rdpArgs := "", nrstArgs := "", bootSelArgs := ""
     
     if (MCU_FAMILY == "G0" || MCU_FAMILY == "G4") {
         if (ddlBOR.Value == 1) {
@@ -395,6 +426,8 @@ OnOptOnlyClick(*) {
         }
         iwdgArgs := "IWDG_SW=" (chkIWDG.Value ? "0" : "1")
         nrstArgs := "NRST_MODE=" (ddlNRST.Value == 1 ? "3" : "1")
+        ; nBOOT_SEL: 0 = распознавать пин BOOT0 (legacy, UART bootloader), 1 = использовать бит nBOOT0
+        bootSelArgs := "nBOOT_SEL=" (chkBOOT0.Value ? "0" : "1")
     } else if (MCU_FAMILY == "F4") {
         if (ddlBOR.Value == 1) {
             borArgs := "BOR_LEV=3"
@@ -407,7 +440,7 @@ OnOptOnlyClick(*) {
     
     rdpArgs := (MCU_FAMILY == "F1") ? "RDP=" (chkLockRDP.Value ? "0x00" : "0xA5") : "RDP=" (chkLockRDP.Value ? "0xBB" : "0xAA")
     
-    optionBytesString := Trim(borArgs " " iwdgArgs " " rdpArgs " " nrstArgs)
+    optionBytesString := Trim(borArgs " " iwdgArgs " " rdpArgs " " nrstArgs " " bootSelArgs)
     
     txtTitle.Value := "СТАТУС: Программирование Option Bytes..."
     logBox.Value := "====== ПРОГРАММИРОВАНИЕ OPTION BYTES ======`r`n"
@@ -432,7 +465,7 @@ OnOptOnlyClick(*) {
 ; ПОЛНОЕ ПРОГРАММИРОВАНИЕ (FLASH + OPTION BYTES)
 ; ============================================================================
 OnFlashClick(*) {
-    global BIN_FILE, BIN_DIR, MCU_FAMILY
+    global BIN_FILE, BIN_DIR, MCU_FAMILY, chkBOOT0
     if (BIN_DIR == "") {
         MsgBox("Укажите папку с прошивками перед запуском!", "Ошибка", 48)
         return
@@ -457,7 +490,7 @@ OnFlashClick(*) {
     logBox.Value := "====== [2/2] ЗАПИСЬ ПРОШИВКИ И НАСТРОЙКА ПАРАМЕТРОВ ======`r`n"
     logBox.Value .= "Выбран файл прошивки: " selectedFileName "`r`n"
     
-    borArgs := "", iwdgArgs := "", rdpArgs := "", nrstArgs := ""
+    borArgs := "", iwdgArgs := "", rdpArgs := "", nrstArgs := "", bootSelArgs := ""
     if (MCU_FAMILY == "G0" || MCU_FAMILY == "G4") {
         if (ddlBOR.Value == 1) {
             borArgs := "BOR_EN=0"
@@ -467,6 +500,8 @@ OnFlashClick(*) {
         }
         iwdgArgs := "IWDG_SW=" (chkIWDG.Value ? "0" : "1")
         nrstArgs := "NRST_MODE=" (ddlNRST.Value == 1 ? "3" : "1")
+        ; nBOOT_SEL: 0 = распознавать пин BOOT0 (legacy, UART bootloader), 1 = использовать бит nBOOT0
+        bootSelArgs := "nBOOT_SEL=" (chkBOOT0.Value ? "0" : "1")
     } else if (MCU_FAMILY == "F4") {
         if (ddlBOR.Value == 1) {
             borArgs := "BOR_LEV=3" 
@@ -479,7 +514,7 @@ OnFlashClick(*) {
     
     rdpArgs := (MCU_FAMILY == "F1") ? "RDP=" (chkLockRDP.Value ? "0x00" : "0xA5") : "RDP=" (chkLockRDP.Value ? "0xBB" : "0xAA")
     
-    optionBytesString := Trim(borArgs " " iwdgArgs " " rdpArgs " " nrstArgs)
+    optionBytesString := Trim(borArgs " " iwdgArgs " " rdpArgs " " nrstArgs " " bootSelArgs)
     logBox.Value .= "Сгенерированные параметры битов: " optionBytesString "`r`n"
     
     cmd := '"' CUBE '" -c port=SWD mode=UR reset=HWrst -ob ' optionBytesString ' -w "' BIN_FILE '" 0x08000000 -v -rst'
@@ -567,7 +602,7 @@ OnHelpClick(*) {
     ═══════════════════════════════════════════════════════════════════════════
 
     🔹 ПОДДЕРЖИВАЕМЫЕ СЕМЕЙСТВА:
-       ✔️ STM32G0, STM32G4 — полная поддержка (BOR, IWDG, RDP, NRST)
+       ✔️ STM32G0, STM32G4 — полная поддержка (BOR, IWDG, RDP, NRST, BOOT0)
        ⚠️ STM32F4 — частичная (NRST Mode недоступен)
        ⚠️ STM32F1 — минимальная (только RDP, остальные опции не читаются)
 
@@ -595,6 +630,12 @@ OnHelpClick(*) {
 
        NRST MODE - режим работы ноги сброса
          Input/Output (рекомендуется) или Reset Input Only
+
+       BOOT0 - распознавание пина BOOT0 (nBOOT_SEL, G0/G4)
+         Включено: пин BOOT0 распознаётся (nBOOT_SEL=0) — при BOOT0=1
+                   чип загружается из System Memory (bootloader: UART/USB DFU)
+         Выключено: загрузка управляется битом nBOOT0 в Option Bytes
+                    (nBOOT_SEL=1, заводское значение по умолчанию)
 
     📁 ПРОШИВКА:
        1. Скомпилируйте проект в Arduino IDE
