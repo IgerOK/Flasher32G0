@@ -107,7 +107,7 @@ lblCurNRST := myGui.Add("Text", "x740 y278 w70 h20 +Right cGray", "")
 
 gbBOOT := myGui.Add("GroupBox", "x610 y335 w210 h80", "BOOT0 (System Bootloader)")
 chkBOOT0 := myGui.Add("Checkbox", "x625 y358 w180 h20", "Распознавать пин CLKSWD")
-chkBOOT0.OnEvent("Change", OnBOOT0Change)
+chkBOOT0.OnEvent("Click", OnBOOT0Change)
 lblCurBOOT0 := myGui.Add("Text", "x625 y380 w180 h20 cGray", "SWD")
 
 ; --- НОВЫЕ КНОПКИ (ОПЦИИ и СПРАВКА) ---
