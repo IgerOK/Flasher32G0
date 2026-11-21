@@ -107,7 +107,7 @@ lblCurNRST := myGui.Add("Text", "x740 y278 w70 h20 +Right cGray", "")
 
 gbBOOT := myGui.Add("GroupBox", "x610 y335 w210 h80", "BOOT0 (System Bootloader)")
 chkBOOT0 := myGui.Add("Checkbox", "x625 y358 w180 h20", "Активировать bootloader")
-lblCurBOOT0 := myGui.Add("Text", "x625 y380 w180 h20 cGray", "(nBOOT0=0: system mem)")
+lblCurBOOT0 := myGui.Add("Text", "x625 y380 w180 h20 cGray", "(bootloader: UART + SWD)")
 
 ; --- НОВЫЕ КНОПКИ (ОПЦИИ и СПРАВКА) ---
 btnOptOnly := myGui.Add("Button", "x610 y425 w100 h35", "ОПЦИИ")
@@ -202,7 +202,7 @@ ShowOptionsPreview() {
     
     if (MCU_FAMILY == "G0" || MCU_FAMILY == "G4") {
         previewText .= "  • NRST Mode: " ddlNRST.Text "`n"
-        boot0Text := chkBOOT0.Value ? "Активен (nBOOT0=0) — загрузка в System Memory (UART/USB DFU)" : "Неактивен (nBOOT0=1) — загрузка в пользовательскую Flash"
+        boot0Text := chkBOOT0.Value ? "Активирован (nBOOT0=0) — прошивка по UART (CLKSWD=1) или по SWD (CLKSWD=0)" : "Не активирован (nBOOT0=1) — прошивка только по SWD"
         previewText .= "  • BOOT0: " boot0Text "`n"
     }
     
@@ -216,10 +216,14 @@ ShowOptionsPreview() {
         warningsText .= "    Для разблокировки потребуется кнопка 'РАЗБЛОКИРОВАТЬ ЧИП'.`n"
     }
     if (chkBOOT0.Value && (MCU_FAMILY == "G0" || MCU_FAMILY == "G4")) {
-        warningsText .= "`n[!] ВНИМАНИЕ: System Memory Bootloader будет АКТИВЕН (nBOOT0=0).`n"
-        warningsText .= "    После RESET/питания чип загружается в bootloader (UART/USB DFU),`n"
-        warningsText .= "    ПОЛЬЗОВАТЕЛЬСКАЯ ПРОШИВКА НЕ ЗАПУСКАЕТСЯ!`n"
-        warningsText .= "    После обновления через UART верните BOOT0 в состояние 'Неактивен'.`n"
+        warningsText .= "`n[!] ВНИМАНИЕ: будет АКТИВИРОВАН System Bootloader (nBOOT0=0).`n"
+        warningsText .= "    После RESET/питания чип загружается в System Memory.`n"
+        warningsText .= "    Программирование возможно по SWD (CLKSWD=0) ИЛИ по UART (CLKSWD=1).`n"
+        warningsText .= "    УРОВЕНЬ ПИНА CLKSWD ЗАДАЁТЕСЬ ВРУЧНУЮ ДО ПОДАЧИ ПИТАНИЯ:`n"
+        warningsText .= "    CLKSWD=1 — джампером к VCC; рекомендуется резистор 10к к GND.`n"
+        warningsText .= "    После обновления верните BOOT0 в состояние 'Не активирован' (nBOOT0=1).`n"
+    } else if (!chkBOOT0.Value && (MCU_FAMILY == "G0" || MCU_FAMILY == "G4")) {
+        warningsText .= "`n[ℹ] BOOT0 не активирован (nBOOT0=1): прошивка только по SWD.`n"
     }
     
     if (warningsText != "") {
@@ -634,16 +638,34 @@ OnHelpClick(*) {
        NRST MODE - режим работы ноги сброса
          Input/Output (рекомендуется) или Reset Input Only
 
-       BOOT0 - System Memory Bootloader (nBOOT_SEL + nBOOT0, G0/G4)
-         Активировать bootloader (nBOOT_SEL=1, nBOOT0=0):
-           чип загружается в System Memory — прошивка без ST-LINK
-           по UART (COM-порт, 115200/9600) или USB DFU.
-           SWD при этом остаётся доступен (отладчик работает независимо).
-         НЕ активирован (nBOOT_SEL=1, nBOOT0=1):
-           загрузка в пользовательскую Flash (обычный режим).
-         ВАЖНО: пока bootloader АКТИВЕН (nBOOT0=0), пользовательская
-         прошивка НЕ запускается! После обновления через UART верните
-         чекбокс в состояние 'Не активен'.
+       BOOT0 - System Memory Bootloader (nBOOT_SEL=1 + nBOOT0, G0/G4)
+
+       Чекбокс — осознанный выбор пользователя, что именно ему нужно:
+
+       [НЕ АКТИВИРОВАН] (nBOOT0=1, по умолчанию):
+          Прошивка и отладка только по SWD (ST-LINK). Обычный режим,
+          bootloader отключён.
+
+       [АКТИВИРОВАН] (nBOOT0=0):
+          Включается System Memory Bootloader (ST-загрузчик во Flash).
+          После RESET/питания чип заходит в bootloader, прошивка доступна
+          ДВУМЯ СПОСОБАМИ (выбор — уровнем пина CLKSWD):
+            CLKSWD=0  - программирование по SWD (ST-LINK)
+            CLKSWD=1  - программирование по UART (COM-порт)
+          УРОВЕНЬ ПИНА CLKSWD УСТАНАВЛИВАЕТСЯ ПОЛЬЗОВАТЕЛЕМ САМОСТОЯТЕЛЬНО
+          ДО ПОДАЧИ ПИТАНИЯ (программа только пишет опшен-байты):
+            Для CLKSWD=1 подтянуть пин джампером к VCC (+3.3V).
+            Рекомендуется установить постоянный резистор 10к из CLKSWD в GND
+            (слабое подтягивание, чтобы по умолчанию оставалось CLKSWD=0).
+
+          После обновления прошивки верните чекбокс в состояние
+          "Не активирован" (nBOOT0=1), чтобы загрузчик не мешал
+          запуску пользовательской прошивки.
+
+       ВАЖНО: пока nBOOT0=0, после RESET чип всегда попадает в
+       bootloader, а не в вашу прошивку. Это нормально для режима
+       отладки/обновления, но перед финальной эксплуатацией
+       отключайте bootloader (nBOOT0=1).
 
     📁 ПРОШИВКА:
        1. Скомпилируйте проект в Arduino IDE
