@@ -41,7 +41,7 @@ Flasher32G0.ahk          # нужен AutoHotkey v2
 ## 4. Current status
 
 - Репо склонировано в `D:\STM32-prj\Flasher32G0`, локальный git работает (main).
-- Код: `Flasher32G0.ahk` (GUI-логика), `Flasher32G0.exe` (билд v1.1 от `44a2d75`, **устарел** — не содержит `8062970`; пользователь пересоберёт сам), `README.md`, `LICENSE`, `screenshot.png`, `flasher_v1.1.png`.
+- Код: `Flasher32G0.ahk` (GUI-логика), `Flasher32G0.exe` (текущий билд v1.1, актуален — закоммичен в `7cd61a1` со всеми правками до `982969d` включительно), `README.md`, `LICENSE`, `screenshot.png`, `flasher_v1.1.png`, `flasher_v1.1_1.png`, `flasher_v1.1_2.png`.
 - **Доработка (v1.1):** добавлен опшен-байт **BOOT0 / распознавание пина CLKSWD** для семейств G0/G4:
   - чекбокс «Распознавать пин CLKSWD» в правой панели;
   - запись `nBOOT_SEL=0` (чекбокс вкл., legacy: уровень пина определяет загрузку: CLKSWD=0 → user flash, CLKSWD=1 → system memory bootloader, UART+SWD) или `nBOOT_SEL=1` (чекбокс выкл., заводское: пин игнорируется, только SWD);
@@ -50,7 +50,7 @@ Flasher32G0.ahk          # нужен AutoHotkey v2
   - чтение текущего `nBOOT_SEL` через `-ob displ`;
   - расширены предпросмотр, предупреждения, справка, README;
   - починена обрезанная подпись IWDG (чекбокс w170, индикатор ниже чекбокса).
-- Коммиты: `22ee3b2` (первичный BOOT0 nBOOT_SEL), `80f142f` (временно на nBOOT0 + IWDG + .exe), `5d57bc5` (семантика текста), `8062970` (исправление: чекбокс управляет nBOOT_SEL, не nBOOT0).
+- Коммиты: `22ee3b2` (первичный BOOT0 nBOOT_SEL), `80f142f` (временно на nBOOT0 + IWDG + .exe), `5d57bc5` (семантика текста), `8062970` (исправление: чекбокс управляет nBOOT_SEL, не nBOOT0), `f7d93b0` (примечания BOR/NRST), `982969d` (диод для не-open-drain выхода супервизора), `7cd61a1` (пересобранный .exe).
 
 ## 5. Next steps
 
