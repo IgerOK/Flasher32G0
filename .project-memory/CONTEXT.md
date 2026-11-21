@@ -41,14 +41,15 @@ Flasher32G0.ahk          # нужен AutoHotkey v2
 ## 4. Current status
 
 - Репо склонировано в `D:\STM32-prj\Flasher32G0`, локальный git работает (main).
-- Код: `Flasher32G0.ahk` (GUI-логика), `Flasher32G0.exe` (текущий билд v1.1, скомпилирован пользователем), `README.md`, `LICENSE`, `screenshot.png`.
+- Код: `Flasher32G0.ahk` (GUI-логика), `Flasher32G0.exe` (билд v1.1, скомпилирован пользователем ранее; после `5d57bc5` .exe устарел — пользователь пересоберёт сам), `README.md`, `LICENSE`, `screenshot.png`.
 - **Доработка (v1.1):** добавлен опшен-байт **BOOT0 / System Memory Bootloader** для семейств G0/G4:
   - чекбокс «Активировать bootloader» в правой панели;
-  - запись `nBOOT_SEL=1` (заводское: пин игнорируется) + `nBOOT0=0` (bootloader ON: UART/USB DFU без ST-LINK, SWD работает) или `nBOOT0=1` (user flash);
+  - запись `nBOOT_SEL=1` (заводское: пин BOOT0 игнорируется) + `nBOOT0=0` (bootloader ON) или `nBOOT0=1` (user flash);
+  - **Семантика (уточнена пользователем, `5d57bc5`):** чекбокс = осознанный выбор пользователя. При `nBOOT0=1` — прошивка только по SWD. При `nBOOT0=0` — прошивка по SWD (CLKSWD=0) ИЛИ по UART (CLKSWD=1). Уровнем пина **CLKSWD** управляет пользователь вручную ДО подачи питания (для =1 джампер к VCC; рекомендуется резистор 10к CLKSWD→GND).
   - чтение текущего `nBOOT0` через `-ob displ`;
   - расширены предпросмотр, предупреждения, справка, README;
   - починена обрезанная подпись IWDG (чекбокс w170, индикатор ниже чекбокса).
-- Коммиты: `22ee3b2` (первичный BOOT0 nBOOT_SEL), `80f142f` (активация nBOOT0 + IWDG + новый .exe).
+- Коммиты: `22ee3b2` (первичный BOOT0 nBOOT_SEL), `80f142f` (активация nBOOT0 + IWDG + .exe), `5d57bc5` (семантика BOOT0/CLKSWD, текст интерфейса+справка+README, без .exe).
 
 ## 5. Next steps
 
