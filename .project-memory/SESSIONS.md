@@ -179,3 +179,11 @@ Always start each new entry with a blank line.
 - Verified: ответ API на загрузку ассета — `state:"uploaded"`, download URL `https://github.com/IgerOK/Flasher32G0/releases/download/v1.1/Flasher32G0.exe`; после загрузки ассет виден в `assets` релиза.
 - Not done / limitations: временный токен из Credential Manager использовался в `%TEMP%\ghcred.txt` и удалён после операции; рабочие скрипты лежат в `.agnes/work/` (локальный кэш, не в репо).
 - Next: по необходимости — пуш новых коммитов, новый релиз v1.2 при следующей итерации.
+
+## 2026-11-21 — Зачистка графических файлов (остался только screenshot.png)
+
+- Request: удалить все графические файлы кроме скриншота проекта (остальные — только для справки).
+- Done: `git rm` — flasher_v1.1.png, flasher_v1.1_1.png, flasher_v1.1_2.png, Option_bytes_1.png; удалён untracked «screenshot — копия.png»; CONTEXT.md обновлён (в списке файлов остался только screenshot.png). Удаление закоммичено.
+- Verified: `git ls-files *.png` → только screenshot.png; активных ссылок на удалённые PNG в README нет (упомянуты только как «по скриншоту» в журнале SESSIONS — исторические записи, не трогаем).
+- Not done / limitations: в истории git файлы остаются (старики видны в предыдущих коммитах) — для полного вытеснения из истории потребовалась бы перезапись истории, не делалась.
+- Next: пуш коммита чистки (по явному запросу или вместе с следующим).

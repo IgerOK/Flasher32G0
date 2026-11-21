@@ -42,7 +42,7 @@ Flasher32G0.ahk          # нужен AutoHotkey v2
 
 - **v1.1 опубликована на GitHub:** пуш `main` (32 коммита, до `3db5fca`), тег `v1.1`, релиз `v1.1` (id 453797442) с ассетом `Flasher32G0.exe` → https://github.com/IgerOK/Flasher32G0/releases
 - Репо склонировано в `D:\STM32-prj\Flasher32G0`, локальный git работает (main).
-- Код: `Flasher32G0.ahk` (GUI-логика), `README.md` (установка .exe — через GitHub Releases), `LICENSE`, `screenshot.png` (v1.1), `flasher_v1.1.png`, `flasher_v1.1_1.png`, `flasher_v1.1_2.png`, `Option_bytes_1.png`.
+- Код: `Flasher32G0.ahk` (GUI-логика), `README.md` (установка .exe — через GitHub Releases), `LICENSE`, `screenshot.png` (v1.1 — единственный графический файл; старые рабочие PNG удалены 2026-11-21).
 - **`.exe` вынесен из репозитория** (коммит `7d97721`): бинарник больше не лежит в корне, раздаётся через GitHub **Releases**; локально `Flasher32G0.exe` (v1.1, скомпилирован пользователем) сохраняется в `.gitignore` для тестов.
 - **Доработка (v1.1):** добавлен опшен-байт **BOOT0 / распознавание пина CLKSWD** для семейств G0/G4:
   - чекбокс «Распознавать пин CLKSWD» в правой панели;
