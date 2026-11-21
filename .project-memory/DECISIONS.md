@@ -38,3 +38,9 @@ Record significant choices here. Each entry stays forever — no deletion, only 
 - Decision: AllToAny is the single public repo of the memory system; older siblings (AllToZed, AllToDSH, alltoone, allToOne-setup) will be deleted by the user.
 - Alternatives considered: "Смежные проекты" section with cross-links in the README — rejected: not needed once the old repos are gone.
 - Consequences: AllToAny docs contain no external links to sibling repos (verified by grep); deleting them breaks nothing.
+
+## 2026-11-21 — BOOT0 via nBOOT_SEL option byte (G0/G4)
+
+- Decision: the requirement "enable BOOT0 recognition so the chip can be used both as SWD and UART" is implemented as a new `nBOOT_SEL` option byte control for G0/G4 only. `nBOOT_SEL=0` → the physical BOOT0 pin is honoured (legacy mode): BOOT0=1 boots the system memory bootloader (UART/USB DFU), BOOT0=0 boots user flash. `nBOOT_SEL=1` (factory default) → the pin is ignored and boot region comes from the `nBOOT0` option bit. SWD programming is unaffected in either case.
+- Alternatives considered: adding `nBOOT0`/`nBOOT1` bits directly — rejected: with `nBOOT_SEL=1` the nBOOT0 bit already forces system-memory boot without any pin, which is a different, rarer use case; the pin-legacy semantics are what the user asked for. F1/F4 families left untouched (their boot behaviour differs, no BOOT0 pin option byte there).
+- Consequences: GUI gains a "BOOT0" group (checkbox + current-state label), right panel buttons shift down, default window height 530→615. Generated `-ob` commands now append `nBOOT_SEL=` for G0/G4. Family-specific availability kept in `ConfigureGuiForFamily`.

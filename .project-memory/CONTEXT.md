@@ -4,57 +4,58 @@
 
 ## 1. What this project is about
 
-- **Name:** Оптимизация
-- **Goal:** A universal project-memory system that can be distributed via GitHub and consumed by any agent from any application.
-- **Problem it solves:** Agents forget project context between sessions. This repo gives any agent a platform-independent, git-versioned memory they can read before work and update after.
+- **Name:** Flasher32G0
+- **Goal:** GUI-утилита (AutoHotkey v2) для прошивки STM32 и настройки Option Bytes через STM32CubeProgrammer CLI (ST-LINK/SWD).
+- **Problem it solves:** Не нужно запоминать синтаксис CLI-команд; интерфейс показывает текущие опции и позволяет записать их (BOR, IWDG, RDP, NRST MODE, BOOT0) и/или прошить flash по адресу 0x08000000.
 
 ## 2. Stack & Environment
 
 | Component | Value |
 | --- | --- |
-| Platform | Git, Bash (Git Bash on Windows) |
-| Agent tooling | Freebuff / Codebuff (freebuff.com) — but the `.project-memory/` system is platform-agnostic |
-| OS / dev environment | Windows, Git Bash |
-| Repository | Local git repo (`main` branch, single clean commit; not pushed yet) |
+| Language | AutoHotkey v2 |
+| GUI | AutoHotkey `Gui` (Windows, адаптивный ресайз) |
+| External tool | STM32CubeProgrammer CLI (`STM32_Programmer_CLI.exe`) |
+| Interface | SWD через ST-LINK; family detect по Device ID |
+| Families | STM32G0 (полная), STM32G4 (полная), STM32F4 (без NRST/BOOT0), STM32F1 (только RDP) |
+| OS | Windows (x86/x64) |
+| Repo | `https://github.com/IgerOK/Flasher32G0` (локальный git, main) |
 
 ## 3. How to run / build / use
 
-**Use the memory system:**
-1. Before work → read `.project-memory/AGENTS.md`, then `.project-memory/CONTEXT.md`
-2. Read last 3 entries of `.project-memory/SESSIONS.md`
-3. Do the requested work
-4. Append entry to `.project-memory/SESSIONS.md`, update this file, optionally add to `.project-memory/DECISIONS.md`
+**Run source:**
+```
+git clone https://github.com/IgerOK/Flasher32G0.git
+cd Flasher32G0
+Flasher32G0.ahk          # нужен AutoHotkey v2
+```
+или запустить `Flasher32G0.exe` (компилируется вручную через Ahk2Exe).
 
-**Git (local):**
-- The repo is local only. Do NOT push to a remote without explicit user instruction.
-- Commit memory updates together with code changes.
+**Build (.ahk → .exe):**
+- `Ahk2Exe -in Flasher32G0.ahk -out Flasher32G0.exe` (исполняемый AHK v2)
 
-**Reference docs:**
-- `README.md` (root) — full guide in Russian for distributing on GitHub and using with any agent
+**Memory protocol:**
+1. Перед работой → читать `.project-memory/AGENTS.md`, затем `CONTEXT.md`, `TASK.md`, последние 3 записи `SESSIONS.md`.
+2. По ходу — вести `.in-progress.md` (crash safety).
+3. После работы — дописать `SESSIONS.md`, обновить `TASK.md`/`CONTEXT.md`/`DECISIONS.md`, закрыть `.in-progress.md`.
 
 ## 4. Current status
 
-- Universal memory system created in `.project-memory/`:
-  - `AGENTS.md` — protocol (read first, no platform deps)
-  - `CONTEXT.md` — this file
-  - `SESSIONS.md` — journal (append-only)
-  - `DECISIONS.md` — architectural decisions
-  - `archive/` — rotated old sessions, `INDEX.md` for browsing
-- Original Freebuff-specific memory system removed (replaced by universal one)
-- No application code yet — this repo IS the memory infrastructure
-- Repo committed locally, not pushed to remote
-- Crash-safety: `.project-memory/.in-progress.md` scratchpad during sessions, crash recovery in the protocol, `.project-memory/memory-autosave.sh` rescue commit, optional `.project-memory/pre-commit` git hook checks memory state (block on errors, warn on suspicious).
-- Layering: memory has three layers — (L0) `AGENTS.md` the protocol (can stay project-independent in its own repo), (L1) `.in-progress.md` local scratch, (L2) `TASK.md`, `CONTEXT.md`, `DECISIONS.md`, `QUESTIONS.md` project state. When opening this project again with a new agent, read L0, then L2, then recent L2-led SESSIONS entries.
-- Resume safety: on any continuation, run `bash .project-memory/memory-autosave.sh`, read L0 → L2 → recent sessions, give a short status recap, propose the next step, and wait for user confirmation before doing new work.
+- Репо склонировано в `D:\STM32-prj\Flasher32G0`, локальный git работает (main).
+- Код: `Flasher32G0.ahk` (GUI-логика), `Flasher32G0.exe` (старый билд v1.0), `README.md`, `LICENSE`, `screenshot.png`.
+- **Доработка (v1.1):** добавлен опшен-байт **BOOT0 / nBOOT_SEL** для семейств G0/G4:
+  - чекбокс «Распознавать пин BOOT0» в правой панели;
+  - чтение текущего `nBOOT_SEL` через `-ob displ`;
+  - запись `nBOOT_SEL=0` (legacy: пин BOOT0 распознаётся → можно уйти в system memory / UART bootloader) или `nBOOT_SEL=1` (управление через бит nBOOT0, заводское значение);
+  - расширены предпросмотр, справка, README.
+- Коммит: `22ee3b2` (код + README). `.exe` НЕ пересобран — пользователь компилирует сам.
 
 ## 5. Next steps
 
-- Describe the actual application project this memory will serve (if any beyond the memory system itself)
-- Decide: repository strategy (standalone memory repo to be linked from other projects, or per-project memory)
-- Optionally push to GitHub (requires explicit user instruction — do not push without it)
-- If memory system is to be reused in other projects, consider extracting `.project-memory/` into its own dedicated repo as a template
+- Пользователь: скомпилировать `.ahk` в новый `.exe` и проверить на реальном STM32G0 (BOOT0 через SWD + UART).
+- По желанию: пуш на GitHub (только по явному запросу пользователя — не пушить без подтверждения).
+- Опционально: поддержка UART-загрузки прошивки (`port=UART`), если потребуется.
 
 ## 6. Session bookkeeping
 
-- **Last session focus:** Building the universal memory system; cleaning up platform-specific leftovers
-- **Next logical step:** User describes the real project task/stack that this memory should track, or confirms this repo stays as a memory-template repo only
+- **Last session focus:** клонирование + реализация nBOOT_SEL (BOOT0) для G0/G4.
+- **Next logical step:** ручная компиляция и наладка пользователем.

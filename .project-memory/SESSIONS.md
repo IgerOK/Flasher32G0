@@ -91,3 +91,11 @@ Always start each new entry with a blank line.
 - **Verified:** GitHub API вернул обновлённое описание (DESC); коммиты `Fix typos in README.md` + `Add git recommendation note to README` в origin/main; git status чистый.
 - **Not done / limitations:** описание GitHub-репо — текстовое поле, правится только через UI/API (коммитами не меняется).
 - **Next:** по желанию — активировать pre-commit хук, починить secret-скан в memory-check.sh.
+
+## 2026-11-21 — Клонирование Flasher32G0 + опшен-байт BOOT0 (nBOOT_SEL)
+
+- Request: склонировать https://github.com/IgerOK/Flasher32G0, сделать локальный GIT, доработать: для серии STM32G0 добавить в опшен-байты активацию распознавания BOOT0 для использования и SWD, и UART.
+- Done: репо склонировано в `D:\STM32-prj\Flasher32G0` (локальный git `main`, remote origin). В `Flasher32G0.ahk` добавлена группа «BOOT0 (распознавание пина)» с чекбоксом для G0/G4: чтение `nBOOT_SEL` через `-ob displ`, запись `nBOOT_SEL=0` (legacy: пин BOOT0 → system memory / UART bootloader) или `nBOOT_SEL=1` (бит nBOOT0, заводское значение). Обновлены предпросмотр, предупреждения, справка, `ConfigureGuiForFamily`; кнопки правой панели сдвинуты вниз, высота окна 530→615, версия 1.1. `README.md`: колонка BOOT0 в таблице семейств, раздел «BOOT0 (G0/G4)». Коммит `22ee3b2`. Память проекта переключена на Flasher32G0 (TASK/CONTEXT/DECISIONS).
+- Verified: `git status` чистый; полный diff просмотрен; синтаксис AHK проверен логически. Ahk2Exe в этой среде выдаёт «Failed to compile» без текста даже на тестовом минискрипте — инструмент в окружении некорректен, поэтому новый `.exe` пользователь компилирует сам (по договорённости).
+- Not done / limitations: старый `Flasher32G0.exe` (v1.0) не пересобран; на реальном STM32G0 не проверялось; точный формат вывода `nBOOT_SEL` в `-ob displ` зависит от версии CLI — regex пробует `nBOOT_SEL:` и `BOOT_SEL:`, иначе показывает «(не читается)».
+- Next: пользователь компилирует `Flasher32G0.ahk` в новый `.exe`, проверяет на STM32G0 (BOOT0 через SWD + UART bootloader), при необходимости подправляет regex под вывод своего CLI, затем пушит на GitHub.
