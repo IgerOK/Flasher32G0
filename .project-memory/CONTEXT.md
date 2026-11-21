@@ -41,21 +41,23 @@ Flasher32G0.ahk          # нужен AutoHotkey v2
 ## 4. Current status
 
 - Репо склонировано в `D:\STM32-prj\Flasher32G0`, локальный git работает (main).
-- Код: `Flasher32G0.ahk` (GUI-логика), `Flasher32G0.exe` (старый билд v1.0), `README.md`, `LICENSE`, `screenshot.png`.
-- **Доработка (v1.1):** добавлен опшен-байт **BOOT0 / nBOOT_SEL** для семейств G0/G4:
-  - чекбокс «Распознавать пин BOOT0» в правой панели;
-  - чтение текущего `nBOOT_SEL` через `-ob displ`;
-  - запись `nBOOT_SEL=0` (legacy: пин BOOT0 распознаётся → можно уйти в system memory / UART bootloader) или `nBOOT_SEL=1` (управление через бит nBOOT0, заводское значение);
-  - расширены предпросмотр, справка, README.
-- Коммит: `22ee3b2` (код + README). `.exe` НЕ пересобран — пользователь компилирует сам.
+- Код: `Flasher32G0.ahk` (GUI-логика), `Flasher32G0.exe` (текущий билд v1.1, скомпилирован пользователем), `README.md`, `LICENSE`, `screenshot.png`.
+- **Доработка (v1.1):** добавлен опшен-байт **BOOT0 / System Memory Bootloader** для семейств G0/G4:
+  - чекбокс «Активировать bootloader» в правой панели;
+  - запись `nBOOT_SEL=1` (заводское: пин игнорируется) + `nBOOT0=0` (bootloader ON: UART/USB DFU без ST-LINK, SWD работает) или `nBOOT0=1` (user flash);
+  - чтение текущего `nBOOT0` через `-ob displ`;
+  - расширены предпросмотр, предупреждения, справка, README;
+  - починена обрезанная подпись IWDG (чекбокс w170, индикатор ниже чекбокса).
+- Коммиты: `22ee3b2` (первичный BOOT0 nBOOT_SEL), `80f142f` (активация nBOOT0 + IWDG + новый .exe).
 
 ## 5. Next steps
 
-- Пользователь: скомпилировать `.ahk` в новый `.exe` и проверить на реальном STM32G0 (BOOT0 через SWD + UART).
-- По желанию: пуш на GitHub (только по явному запросу пользователя — не пушить без подтверждения).
-- Опционально: поддержка UART-загрузки прошивки (`port=UART`), если потребуется.
+- Тест на реальном STM32G0: вкл. BOOT0 → UART-прошивка без ST-LINK → выкл. BOOT0 (nBOOT0=1) → запуск user flash.
+- При необходимости — подправить regex `ReadOptionBytes` под фактический формат `-ob displ` в CLI v2.17.0.
+- Пуш на GitHub (только по явному запросу пользователя — не пушить без подтверждения).
+- Опционально: поддержка UART-загрузки прошивки прямо из GUI (`port=UART`), если потребуется.
 
 ## 6. Session bookkeeping
 
-- **Last session focus:** клонирование + реализация nBOOT_SEL (BOOT0) для G0/G4.
-- **Next logical step:** ручная компиляция и наладка пользователем.
+- **Last session focus:** 2-я итерация v1.1 — BOOT0 как активация System Bootloader (nBOOT_SEL=1 + nBOOT0) + фикс подписи IWDG.
+- **Next logical step:** ручной тест на чипе, затем пуш по запросу.

@@ -92,6 +92,14 @@ Always start each new entry with a blank line.
 - **Not done / limitations:** описание GitHub-репо — текстовое поле, правится только через UI/API (коммитами не меняется).
 - **Next:** по желанию — активировать pre-commit хук, починить secret-скан в memory-check.sh.
 
+## 2026-11-21 — BOOT0 → активация System Bootloader (nBOOT0) + IWDG label
+
+- Request: (по скриншоту v1.1) починить обрезанную подпись IWDG; BOOT0 — не «распознавать пин», а «активировать».
+- Done: IWDG — чекбокс `w115→w170`, индикатор значения перенесён под чекбокс (`y140`), фикс в `OnGuiSize`. BOOT0 переименована в «System Bootloader»: пишется `nBOOT_SEL=1` (заводское, пин игнорируется) + `nBOOT0=0` (bootloader ON: UART/USB DFU, SWD работает) или `nBOOT0=1` (user flash). Обновлены предпросмотр, предупреждение, парсинг `nBOOT0`, справка, README; новый v1.1 .exe (откомпилирован пользователем), коммит `80f142f`.
+- Verified: git diff просмотрен; grep nBOOT_SEL/nBOOT0 подтверждает консистентность; .exe скомпилирован пользователем сам.
+- Not done / limitations: на чипе не проверялось; точный вывод `-ob displ` по `nBOOT0` зависит от версии CLI (regex пробует `nBOOT0:` и `BOOT0:`).
+- Next: тест на STM32G0: вкл. BOOT0 → UART-прошивка → выкл. BOOT0 (nBOOT0=1) → запуск user flash; пуш на GitHub по явному запросу.
+
 ## 2026-11-21 — Клонирование Flasher32G0 + опшен-байт BOOT0 (nBOOT_SEL)
 
 - Request: склонировать https://github.com/IgerOK/Flasher32G0, сделать локальный GIT, доработать: для серии STM32G0 добавить в опшен-байты активацию распознавания BOOT0 для использования и SWD, и UART.
