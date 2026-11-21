@@ -123,3 +123,11 @@ Always start each new entry with a blank line.
 - Verified: полный diff просмотрен; grep подтверждает, что `nBOOT0` в логике записи удалён; таблица загрузки сверена с AN5145/RM0454 (nBOOT_SEL=0 + nBOOT1=1: BOOT0=0 → Main Flash, BOOT0=1 → System Memory).
 - Not done / limitations: .exe (44a2d75) не содержит `8062970` — пользователь пересоберёт сам; на чипе не проверялось; формат вывода `nBOOT_SEL` в `-ob displ` зависит от версии CLI.
 - Next: пользователь компилирует `.ahk`, тест на STM32G0 (ВКЛ + джампер → UART; снять джампер + RESET → свой код), пуш на GitHub по явному запросу.
+
+## 2026-11-21 — UI: короткая статусная надпись BOOT0 (SWD / SWD+UART)
+
+- Request: по скриншоту flasher_v1.1_1.png — подправить надпись в секции BOOT0: убрать лишнее. Не активен → «SWD», активен → «SWD+UART».
+- Done: `lblCurBOOT0` — стартовое значение «SWD»; добавлен обработчик `OnBOOT0Change` (OnEvent "Change"), переключающий надпись «SWD»/«SWD+UART» при клике по чекбоксу; в `ReadOptionBytes` парсинг `nBOOT_SEL` теперь пишет короткие надписи («SWD» / «SWD+UART», фолбэк «(не читается)»). Коммит `1eaad9d`.
+- Verified: git diff просмотрен (12 insertions / 3 deletions), обработчик зарегистрирован до создания элементов, глобалы объявлены.
+- Not done / limitations: .exe в репо не содержит `1eaad9d` — пользователь пересоберёт сам; визуальная проверка на реальном GUI не делалась.
+- Next: пользователь компилирует `.ahk`, при желании пушит на GitHub (по явному запросу).
