@@ -106,8 +106,8 @@ ddlNRST := myGui.Add("DropDownList", "x625 y275 w115 Choose1", ["Input/Output", 
 lblCurNRST := myGui.Add("Text", "x740 y278 w70 h20 +Right cGray", "")
 
 gbBOOT := myGui.Add("GroupBox", "x610 y335 w210 h80", "BOOT0 (System Bootloader)")
-chkBOOT0 := myGui.Add("Checkbox", "x625 y358 w180 h20", "Активировать bootloader")
-lblCurBOOT0 := myGui.Add("Text", "x625 y380 w180 h20 cGray", "(bootloader: UART + SWD)")
+chkBOOT0 := myGui.Add("Checkbox", "x625 y358 w180 h20", "Распознавать пин CLKSWD")
+lblCurBOOT0 := myGui.Add("Text", "x625 y380 w180 h20 cGray", "(пин игнорируется)")
 
 ; --- НОВЫЕ КНОПКИ (ОПЦИИ и СПРАВКА) ---
 btnOptOnly := myGui.Add("Button", "x610 y425 w100 h35", "ОПЦИИ")
@@ -202,7 +202,7 @@ ShowOptionsPreview() {
     
     if (MCU_FAMILY == "G0" || MCU_FAMILY == "G4") {
         previewText .= "  • NRST Mode: " ddlNRST.Text "`n"
-        boot0Text := chkBOOT0.Value ? "Активирован (nBOOT0=0) — прошивка по UART (CLKSWD=1) или по SWD (CLKSWD=0)" : "Не активирован (nBOOT0=1) — прошивка только по SWD"
+        boot0Text := chkBOOT0.Value ? "Пин распознаётся (nBOOT_SEL=0) — выбор: CLKSWD=0 → user code / CLKSWD=1 → bootloader (SWD+UART)" : "Пин игнорируется (nBOOT_SEL=1) — только SWD"
         previewText .= "  • BOOT0: " boot0Text "`n"
     }
     
@@ -216,14 +216,16 @@ ShowOptionsPreview() {
         warningsText .= "    Для разблокировки потребуется кнопка 'РАЗБЛОКИРОВАТЬ ЧИП'.`n"
     }
     if (chkBOOT0.Value && (MCU_FAMILY == "G0" || MCU_FAMILY == "G4")) {
-        warningsText .= "`n[!] ВНИМАНИЕ: будет АКТИВИРОВАН System Bootloader (nBOOT0=0).`n"
-        warningsText .= "    После RESET/питания чип загружается в System Memory.`n"
-        warningsText .= "    Программирование возможно по SWD (CLKSWD=0) ИЛИ по UART (CLKSWD=1).`n"
-        warningsText .= "    УРОВЕНЬ ПИНА CLKSWD ЗАДАЁТЕСЬ ВРУЧНУЮ ДО ПОДАЧИ ПИТАНИЯ:`n"
-        warningsText .= "    CLKSWD=1 — джампером к VCC; рекомендуется резистор 10к к GND.`n"
-        warningsText .= "    После обновления верните BOOT0 в состояние 'Не активирован' (nBOOT0=1).`n"
+        warningsText .= "`n[!] ВНИМАНИЕ: будет ВКЛЮЧЕНО распознавание пина (nBOOT_SEL=0).`n"
+        warningsText .= "    Чекбокс ОТКРЫВАЕТ ВОЗМОЖНОСТЬ прошиться по SWD или по UART.`n"
+        warningsText .= "    Уровень пина CLKSWD задаётся ВРУЧНУЮ до подачи питания:`n"
+        warningsText .= "    CLKSWD=1 — джампер к VCC (+3.3V) → чип в System Memory`n"
+        warningsText .= "    (bootloader: SWD + UART); CLKSWD=0 — джампер снят,`n"
+        warningsText .= "    резистор 10к к GND → стартует пользовательский код.`n"
+        warningsText .= "    После прошивки: СНЯТЬ ДЖАМПЕР С ПЛЮСА ПИТАНИЯ и`n"
+        warningsText .= "    перезагрузить чип — запустится собственный код.`n"
     } else if (!chkBOOT0.Value && (MCU_FAMILY == "G0" || MCU_FAMILY == "G4")) {
-        warningsText .= "`n[ℹ] BOOT0 не активирован (nBOOT0=1): прошивка только по SWD.`n"
+        warningsText .= "`n[ℹ] Пин не распознаётся (nBOOT_SEL=1): прошивка только по SWD.`n"
     }
     
     if (warningsText != "") {
@@ -355,14 +357,14 @@ ReadOptionBytes() {
                 }
             }
 
-            ; System Memory Bootloader (nBOOT0: 0 = bootloader активен, 1 = загрузка в user flash)
-            boot0 := -1
-            if RegExMatch(logText, "i)nBOOT0\s*:\s*(0x[0-9A-Fa-f]+)", &matchBOOT0) || RegExMatch(logText, "i)BOOT0\s*:\s*(0x[0-9A-Fa-f]+)", &matchBOOT0) {
-                try boot0 := Integer(matchBOOT0[1])
-                if (boot0 == 0) {
-                    chkBOOT0.Value := 1, lblCurBOOT0.Value := "(bootloader ON)"
+            ; nBOOT_SEL: 0 = legacy mode (распознавать пин CLKSWD), 1 = пин игнорируется (boot по nBOOT0)
+            bootSel := -1
+            if RegExMatch(logText, "i)nBOOT_SEL\s*:\s*(0x[0-9A-Fa-f]+)", &matchBOOTSEL) || RegExMatch(logText, "i)BOOT_SEL\s*:\s*(0x[0-9A-Fa-f]+)", &matchBOOTSEL) {
+                try bootSel := Integer(matchBOOTSEL[1])
+                if (bootSel == 0) {
+                    chkBOOT0.Value := 1, lblCurBOOT0.Value := "(пин распознаётся)"
                 } else {
-                    chkBOOT0.Value := 0, lblCurBOOT0.Value := "(user flash)"
+                    chkBOOT0.Value := 0, lblCurBOOT0.Value := "(пин игнорируется)"
                 }
             } else {
                 lblCurBOOT0.Value := "(не читается)"
@@ -431,9 +433,9 @@ OnOptOnlyClick(*) {
         }
         iwdgArgs := "IWDG_SW=" (chkIWDG.Value ? "0" : "1")
         nrstArgs := "NRST_MODE=" (ddlNRST.Value == 1 ? "3" : "1")
-        ; System Memory Bootloader: nBOOT_SEL=1 (игнорировать пин, заводское значение)
-        ; + nBOOT0=0 — активировать bootloader (UART/USB DFU), nBOOT0=1 — user flash
-        bootSelArgs := "nBOOT_SEL=1 nBOOT0=" (chkBOOT0.Value ? "0" : "1")
+        ; nBOOT_SEL: 0 = распознавать пин CLKSWD (legacy: CLKSWD=1 → system memory/bootloader,
+        ;             CLKSWD=0 → user flash); 1 = пин игнорируется (boot по nBOOT0)
+        bootSelArgs := "nBOOT_SEL=" (chkBOOT0.Value ? "0" : "1")
     } else if (MCU_FAMILY == "F4") {
         if (ddlBOR.Value == 1) {
             borArgs := "BOR_LEV=3"
@@ -506,9 +508,9 @@ OnFlashClick(*) {
         }
         iwdgArgs := "IWDG_SW=" (chkIWDG.Value ? "0" : "1")
         nrstArgs := "NRST_MODE=" (ddlNRST.Value == 1 ? "3" : "1")
-        ; System Memory Bootloader: nBOOT_SEL=1 (игнорировать пин, заводское значение)
-        ; + nBOOT0=0 — активировать bootloader (UART/USB DFU), nBOOT0=1 — user flash
-        bootSelArgs := "nBOOT_SEL=1 nBOOT0=" (chkBOOT0.Value ? "0" : "1")
+        ; nBOOT_SEL: 0 = распознавать пин CLKSWD (legacy: CLKSWD=1 → system memory/bootloader,
+        ;             CLKSWD=0 → user flash); 1 = пин игнорируется (boot по nBOOT0)
+        bootSelArgs := "nBOOT_SEL=" (chkBOOT0.Value ? "0" : "1")
     } else if (MCU_FAMILY == "F4") {
         if (ddlBOR.Value == 1) {
             borArgs := "BOR_LEV=3" 
@@ -638,34 +640,38 @@ OnHelpClick(*) {
        NRST MODE - режим работы ноги сброса
          Input/Output (рекомендуется) или Reset Input Only
 
-       BOOT0 - System Memory Bootloader (nBOOT_SEL=1 + nBOOT0, G0/G4)
+       BOOT0 (System Bootloader, nBOOT_SEL, G0/G4)
 
-       Чекбокс — осознанный выбор пользователя, что именно ему нужно:
+       Чекбокс — осознанный выбор пользователя: ОТКРЫВАЕТ ВОЗМОЖНОСТЬ
+       прошиться либо по SWD, либо по UART (не управляет пинами).
 
-       [НЕ АКТИВИРОВАН] (nBOOT0=1, по умолчанию):
-          Прошивка и отладка только по SWD (ST-LINK). Обычный режим,
-          bootloader отключён.
+       [НЕ АКТИВИРОВАН] (nBOOT_SEL=1, по умолчанию):
+          Пин CLKSWD игнорируется. Прошивка и отладка только по SWD.
+          Обычный режим, bootloader отключён.
 
-       [АКТИВИРОВАН] (nBOOT0=0):
-          Включается System Memory Bootloader (ST-загрузчик во Flash).
-          После RESET/питания чип заходит в bootloader, прошивка доступна
-          ДВУМЯ СПОСОБАМИ (выбор — уровнем пина CLKSWD):
-            CLKSWD=0  - программирование по SWD (ST-LINK)
-            CLKSWD=1  - программирование по UART (COM-порт)
-          УРОВЕНЬ ПИНА CLKSWD УСТАНАВЛИВАЕТСЯ ПОЛЬЗОВАТЕЛЕМ САМОСТОЯТЕЛЬНО
+       [АКТИВИРОВАН] (nBOOT_SEL=0, legacy mode):
+          Пин CLKSWD распознаётся, и ЕГО УРОВЕНЬ определяет, куда
+          загрузится чип (выбор делает пользователь вручную):
+            CLKSWD=0 - старт из Main Flash (свой код), SWD доступен
+            CLKSWD=1 - старт в System Memory (bootloader): прошивка
+                       по UART (COM-порт) ИЛИ по SWD (ST-LINK)
+          УРОВЕНЬ ПИНА CLKSWD УСТАНАВЛИВАЕТ ПОЛЬЗОВАТЕЛЬ САМОСТОЯТЕЛЬНО
           ДО ПОДАЧИ ПИТАНИЯ (программа только пишет опшен-байты):
-            Для CLKSWD=1 подтянуть пин джампером к VCC (+3.3V).
-            Рекомендуется установить постоянный резистор 10к из CLKSWD в GND
-            (слабое подтягивание, чтобы по умолчанию оставалось CLKSWD=0).
+            Для CLKSWD=1 - подтянуть пин джампером к VCC (+3.3V).
+            Рекомендуется постоянный резистор 10к из CLKSWD в GND
+            (подтяжка на землю, чтобы по умолчанию CLKSWD=0).
 
-          После обновления прошивки верните чекбокс в состояние
-          "Не активирован" (nBOOT0=1), чтобы загрузчик не мешал
-          запуску пользовательской прошивки.
+          ЗАПУСК СВОЕГО КОДА ПОСЛЕ ПРОШИВКИ:
+            1) СНИМАЕМ ДЖАМПЕР С ПЛЮСА ПИТАНИЯ (VCC) - пин CLKSWD
+               вернётся в состояние 0 (через резистор 10к к земле).
+            2) ПЕРЕЗАГРУЖАЕМ чип (RESET / перекл. питания).
+            3) Стартует пользовательский код.
 
-       ВАЖНО: пока nBOOT0=0, после RESET чип всегда попадает в
-       bootloader, а не в вашу прошивку. Это нормально для режима
-       отладки/обновления, но перед финальной эксплуатацией
-       отключайте bootloader (nBOOT0=1).
+       ВАЖНО: при активированном чекбоксе (nBOOT_SEL=0) и
+       CLKSWD=1 чип загружается в bootloader, а не в вашу прошивку.
+       Для запуска своего кода - СНЯТЬ джампер (CLKSWD=0) и
+       перезагрузить. По желанию затем можно полностью отключить
+       распознавание пина (снять чекбокс, nBOOT_SEL=1).
 
     📁 ПРОШИВКА:
        1. Скомпилируйте проект в Arduino IDE
