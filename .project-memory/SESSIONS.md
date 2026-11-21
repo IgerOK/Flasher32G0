@@ -171,3 +171,11 @@ Always start each new entry with a blank line.
 - Verified: git status — .exe не отслеживается и не в ignore-статусе ??; README ссылается на Releases.
 - Not done / limitations: сам GitHub Release v1.1 ещё не создан (нужен доступ к GitHub); пуш ветки не выполнялся (ждёт явного запроса).
 - Next: пользователь пушит main и создаёт Release v1.1 (загружает локальный Flasher32G0.exe как ассет).
+
+## 2026-11-21 — Пуш на GitHub + релиз v1.1 с .exe
+
+- Request: сделать пуш и подготовить релиз на GitHub; если не получится загрузить .exe — пользователь добавит вручную.
+- Done: (1) пуш `main` на origin — 32 локальных коммита ушли (6ce159c..3db5fca), удалённое репо теперь v1.1 (changelog, новый скриншот, без .exe в корне); (2) создан аннотированный тег `v1.1` и запушен; (3) через GitHub API (токен из Windows Credential Manager, без `gh` CLI) создан релиз `v1.1` (id 453797442) и загружен ассет `Flasher32G0.exe` (1 015 515 байт, state=uploaded, sha256 зафиксирован GitHub).
+- Verified: ответ API на загрузку ассета — `state:"uploaded"`, download URL `https://github.com/IgerOK/Flasher32G0/releases/download/v1.1/Flasher32G0.exe`; после загрузки ассет виден в `assets` релиза.
+- Not done / limitations: временный токен из Credential Manager использовался в `%TEMP%\ghcred.txt` и удалён после операции; рабочие скрипты лежат в `.agnes/work/` (локальный кэш, не в репо).
+- Next: по необходимости — пуш новых коммитов, новый релиз v1.2 при следующей итерации.

@@ -4,18 +4,22 @@
 
 ## Теперь (текущий статус)
 
-status: idle (задача сдана пользователю)
+status: idle (v1.1 опубликована на GitHub)
 
 ## Последняя задача (резюме)
 
-- 2026-11-21 (итерация 10): **бинарники через GitHub Releases** (решение в DECISIONS.md). `.exe` удалён из индекса git (`git rm --cached`, локальный файл сохранён), добавлен в `.gitignore`, README «Вариант 1» теперь ссылается на [Releases]. Коммит `7d97721`. Первый релиз v1.1 создаст пользователь (или по явному запросу — нужен токен/доступ к GitHub API; из этой среды GitHub Releases создаются пользователем вручную или gh CLI).
+- 2026-11-21 (итерация 11): **v1.1 полностью опубликована**:
+  1. пуш `main` → origin (32 коммита, `6ce159c..3db5fca`) — на GitHub v1.1: changelog, новый скриншот, .exe убран из корня;
+  2. аннотированный тег `v1.1` создан и запушен;
+  3. релиз `v1.1` (id 453797442) создан через GitHub API, ассет `Flasher32G0.exe` (1 015 515 байт) загружен: https://github.com/IgerOK/Flasher32G0/releases/download/v1.1/Flasher32G0.exe
+  Токен брался из Windows Credential Manager (`git credential fill`), временный файл `%TEMP%\ghcred.txt` удалён после операции.
 
 ## Open work (если status != idle)
 
-- next step: создание GitHub Release v1.1 (загрузка Flasher32G0.exe из корневого репо — файл лежит локально); пуш ветки на GitHub по явному запросу
-- checks to run: после пуша — проверить, что на GitHub нет .exe в корне; после релиза — скачать .exe через страницу Releases
+- next step: тест v1.1 на реальном STM32G0 (BOOT0-путь: UART-прошивка → снять джампер → user flash); следующая итерация → tег v1.2 + релиз
+- checks to run: если `-ob displ` не выводит `nBOOT_SEL` — подправить regex в `ReadOptionBytes`
 - blockers: нет
-- decisions to reference: DECISIONS.md (раздел «Binaries via GitHub Releases»)
+- decisions to reference: DECISIONS.md (Binaries via GitHub Releases)
 
 ## Подпись последнего обновления
 

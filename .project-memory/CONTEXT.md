@@ -40,6 +40,7 @@ Flasher32G0.ahk          # нужен AutoHotkey v2
 
 ## 4. Current status
 
+- **v1.1 опубликована на GitHub:** пуш `main` (32 коммита, до `3db5fca`), тег `v1.1`, релиз `v1.1` (id 453797442) с ассетом `Flasher32G0.exe` → https://github.com/IgerOK/Flasher32G0/releases
 - Репо склонировано в `D:\STM32-prj\Flasher32G0`, локальный git работает (main).
 - Код: `Flasher32G0.ahk` (GUI-логика), `README.md` (установка .exe — через GitHub Releases), `LICENSE`, `screenshot.png` (v1.1), `flasher_v1.1.png`, `flasher_v1.1_1.png`, `flasher_v1.1_2.png`, `Option_bytes_1.png`.
 - **`.exe` вынесен из репозитория** (коммит `7d97721`): бинарник больше не лежит в корне, раздаётся через GitHub **Releases**; локально `Flasher32G0.exe` (v1.1, скомпилирован пользователем) сохраняется в `.gitignore` для тестов.
@@ -52,7 +53,7 @@ Flasher32G0.ahk          # нужен AutoHotkey v2
   - расширены предпросмотр, предупреждения, справка, README;
   - починена обрезанная подпись IWDG (чекбокс w170, индикатор ниже чекбокса).
 - Коммиты: `22ee3b2` (первичный BOOT0 nBOOT_SEL), `80f142f` (временно на nBOOT0 + IWDG + .exe), `5d57bc5` (семантика текста), `8062970` (исправление: чекбокс управляет nBOOT_SEL, не nBOOT0), `f7d93b0` (примечания BOR/NRST), `982969d` (диод для не-open-drain выхода супервизора), `ee90e00` (лаконичная справка IWDG), `bdbb27d` (README: история версий v1.1 vs v1.0), `a2467bf` (пересобранный .exe + память).
-- На GitHub (`origin/main`) всё ещё **v1.0** — локально **22 коммита выше origin**, пуш только по явному запросу.
+- **v1.1 опубликована:** `main` запушена на GitHub (`3db5fca`), тег `v1.1` создан, релиз `v1.1` (id 453797442) загружен с `Flasher32G0.exe` как ассетом.
 
 ## 5. Next steps
 
