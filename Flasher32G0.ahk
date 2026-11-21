@@ -107,7 +107,8 @@ lblCurNRST := myGui.Add("Text", "x740 y278 w70 h20 +Right cGray", "")
 
 gbBOOT := myGui.Add("GroupBox", "x610 y335 w210 h80", "BOOT0 (System Bootloader)")
 chkBOOT0 := myGui.Add("Checkbox", "x625 y358 w180 h20", "Распознавать пин CLKSWD")
-lblCurBOOT0 := myGui.Add("Text", "x625 y380 w180 h20 cGray", "(пин игнорируется)")
+chkBOOT0.OnEvent("Change", OnBOOT0Change)
+lblCurBOOT0 := myGui.Add("Text", "x625 y380 w180 h20 cGray", "SWD")
 
 ; --- НОВЫЕ КНОПКИ (ОПЦИИ и СПРАВКА) ---
 btnOptOnly := myGui.Add("Button", "x610 y425 w100 h35", "ОПЦИИ")
@@ -362,9 +363,9 @@ ReadOptionBytes() {
             if RegExMatch(logText, "i)nBOOT_SEL\s*:\s*(0x[0-9A-Fa-f]+)", &matchBOOTSEL) || RegExMatch(logText, "i)BOOT_SEL\s*:\s*(0x[0-9A-Fa-f]+)", &matchBOOTSEL) {
                 try bootSel := Integer(matchBOOTSEL[1])
                 if (bootSel == 0) {
-                    chkBOOT0.Value := 1, lblCurBOOT0.Value := "(пин распознаётся)"
+                    chkBOOT0.Value := 1, lblCurBOOT0.Value := "SWD+UART"
                 } else {
-                    chkBOOT0.Value := 0, lblCurBOOT0.Value := "(пин игнорируется)"
+                    chkBOOT0.Value := 0, lblCurBOOT0.Value := "SWD"
                 }
             } else {
                 lblCurBOOT0.Value := "(не читается)"
@@ -379,6 +380,14 @@ ReadOptionBytes() {
         ConfigureGuiForFamily("UNKNOWN")
     }
     DllCall("InvalidateRect", "Ptr", myGui.Hwnd, "Ptr", 0, "Int", true)
+}
+
+; ============================================================================
+; СМЕНА НАДПИСИ BOOT0 ПРИ ПЕРЕКЛЮЧЕНИИ ЧЕКБОКСА (SWD / SWD+UART)
+; ============================================================================
+OnBOOT0Change(*) {
+    global chkBOOT0, lblCurBOOT0
+    lblCurBOOT0.Value := chkBOOT0.Value ? "SWD+UART" : "SWD"
 }
 
 ; ============================================================================
