@@ -1,6 +1,6 @@
 # Flasher32G0
 
-**GUI-утилита для прошивки STM32 и настройки Option Bytes через STM32CubeProgrammer CLI**
+**GUI-утилита для прошивки STM32G0x и настройки Option Bytes через STM32CubeProgrammer CLI**
 
 **Current version: 1.1**
 
