@@ -41,7 +41,8 @@ Flasher32G0.ahk          # нужен AutoHotkey v2
 ## 4. Current status
 
 - Репо склонировано в `D:\STM32-prj\Flasher32G0`, локальный git работает (main).
-- Код: `Flasher32G0.ahk` (GUI-логика), `Flasher32G0.exe` (текущий билд v1.1, актуален — закоммичен в `a2467bf` со всеми правками до `ee90e00`/`bdbb27d`), `README.md` (с секцией «История версий» v1.1 vs v1.0), `LICENSE`, `screenshot.png`, `flasher_v1.1.png`, `flasher_v1.1_1.png`, `flasher_v1.1_2.png`.
+- Код: `Flasher32G0.ahk` (GUI-логика), `README.md` (установка .exe — через GitHub Releases), `LICENSE`, `screenshot.png` (v1.1), `flasher_v1.1.png`, `flasher_v1.1_1.png`, `flasher_v1.1_2.png`, `Option_bytes_1.png`.
+- **`.exe` вынесен из репозитория** (коммит `7d97721`): бинарник больше не лежит в корне, раздаётся через GitHub **Releases**; локально `Flasher32G0.exe` (v1.1, скомпилирован пользователем) сохраняется в `.gitignore` для тестов.
 - **Доработка (v1.1):** добавлен опшен-байт **BOOT0 / распознавание пина CLKSWD** для семейств G0/G4:
   - чекбокс «Распознавать пин CLKSWD» в правой панели;
   - запись `nBOOT_SEL=0` (чекбокс вкл., legacy: уровень пина определяет загрузку: CLKSWD=0 → user flash, CLKSWD=1 → system memory bootloader, UART+SWD) или `nBOOT_SEL=1` (чекбокс выкл., заводское: пин игнорируется, только SWD);

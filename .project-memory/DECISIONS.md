@@ -60,3 +60,9 @@ Record significant choices here. Each entry stays forever — no deletion, only 
 - User's intended workflow (kept verbatim in help/README): the checkbox merely **provides the option** to program via SWD or UART; the user sets the CLKSWD pin level manually before power-up (jumper to VCC for =1; recommended 10kΩ pull-down to GND). To run user code after flashing: remove the jumper from VCC (pin returns to 0 via the 10kΩ pull-down), reset the chip — user code starts; no need to toggle the checkbox back off.
 - Alternatives considered: the nBOOT0-activation variant (previous entry) — rejected by the user because it ignores the pin entirely, which contradicts the jumper-based pin-level switching the user designed.
 - Consequences: write commands for G0/G4 append `nBOOT_SEL=<0|1>` only; parser reads `nBOOT_SEL` from `-ob displ` (regex also tries `BOOT_SEL:`; fallback «(не читается)»); checkbox label «Распознавать пин CLKSWD»; preview/warnings/help/README all describe the pin-level workflow with the remove-jumper step. .exe in repo (44a2d75) is stale relative to this commit — user recompiles.
+
+## 2026-11-21 — Binaries via GitHub Releases, not in the repo root
+
+- Decision: `Flasher32G0.exe` is removed from version control at the repo root (commit 7d97721); compiled binaries are distributed as GitHub **Releases** assets. The local .exe remains on disk for testing but is now gitignored.
+- Alternatives considered: keep committing the rebuilt .exe to the root — rejected: stale binaries accumulate in history (the v1.0 .exe was committed earlier and was misleading), and Releases gives a versioned, replaceable, tag-attached distribution point with download counts and notes.
+- Consequences: README install instructions point to the Releases page; every new release = create tag + upload the fresh .exe; no binary blobs in future repo history. The first release (v1.1) must be created by the user or after explicit request.

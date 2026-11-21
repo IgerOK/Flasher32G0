@@ -8,14 +8,14 @@ status: idle (задача сдана пользователю)
 
 ## Последняя задача (резюме)
 
-- 2026-11-21 (итерация 9): (1) лаконичное пояснение IWDG в AHK-справке (авто-старт после сброса, «кормление» в main-цикле, отключение только перезаписью опшен-байтов) — `ee90e00`; (2) в README добавлена секция «📋 История версий» с отличиями v1.1 от v1.0 (BOOT0/nBOOT_SEL, примечания BOR/NRST/IWDG, фикс IWDG-label, новая группа в GUI) — `bdbb27d`; (3) пересобранный .exe — `a2467bf`.
+- 2026-11-21 (итерация 10): **бинарники через GitHub Releases** (решение в DECISIONS.md). `.exe` удалён из индекса git (`git rm --cached`, локальный файл сохранён), добавлен в `.gitignore`, README «Вариант 1» теперь ссылается на [Releases]. Коммит `7d97721`. Первый релиз v1.1 создаст пользователь (или по явному запросу — нужен токен/доступ к GitHub API; из этой среды GitHub Releases создаются пользователем вручную или gh CLI).
 
 ## Open work (если status != idle)
 
-- next step: пуш на GitHub по явному запросу (на удалённом репо всё ещё v1.0); тест на STM32G0
-- checks to run: компиляция + проверка на чипе; если `-ob displ` не выводит nBOOT_SEL — подправить regex
+- next step: создание GitHub Release v1.1 (загрузка Flasher32G0.exe из корневого репо — файл лежит локально); пуш ветки на GitHub по явному запросу
+- checks to run: после пуша — проверить, что на GitHub нет .exe в корне; после релиза — скачать .exe через страницу Releases
 - blockers: нет
-- decisions to reference: DECISIONS.md
+- decisions to reference: DECISIONS.md (раздел «Binaries via GitHub Releases»)
 
 ## Подпись последнего обновления
 

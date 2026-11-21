@@ -163,3 +163,11 @@ Always start each new entry with a blank line.
 - Verified: diff просмотрен (22 строки README, 4 строки .ahk); дерево git чистое после `a2467bf`.
 - Not done / limitations: на GitHub до сих пор v1.0 (пуши не делалось — только по явному запросу); отличия v1.1 видны теперь только после пуша.
 - Next: пуш на GitHub по явному запросу (сделает v1.1 видимым в удалённом репо).
+
+## 2026-11-21 — Миграция .exe в GitHub Releases
+
+- Request: пользователь скомпилировал v1.1; .exe v1.0 из корня репо лучше удалить, скомпилированный бинарник поместить в релиз.
+- Done: `git rm --cached Flasher32G0.exe` (локальный файл сохранён для тестов), добавлен в `.gitignore`, README «Вариант 1» теперь ссылается на страницу Releases (v1.1). Коммит `7d97721`. Решение записано в DECISIONS.md.
+- Verified: git status — .exe не отслеживается и не в ignore-статусе ??; README ссылается на Releases.
+- Not done / limitations: сам GitHub Release v1.1 ещё не создан (нужен доступ к GitHub); пуш ветки не выполнялся (ждёт явного запроса).
+- Next: пользователь пушит main и создаёт Release v1.1 (загружает локальный Flasher32G0.exe как ассет).
